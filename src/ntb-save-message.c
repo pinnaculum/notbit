@@ -223,7 +223,7 @@ ntb_save_message(time_t timestamp,
         fprintf(out,
                 "\n"
                 "Date: %s, %i %s %i %02i:%02i:%02i %c%02li%02li\n"
-                "Content-Type: text/plain; charset=UTF-8\n"
+                "Content-Type: text/plain; charset=UTF-8; markup=markdown\n"
                 "Content-Transfer-Encoding: 8bit\n",
                 day_names[tm.tm_wday],
                 tm.tm_mday,
