@@ -334,7 +334,8 @@ content_type_type_cb(const char *type,
 {
         struct parse_content_type_data *data = user_data;
 
-        if (ascii_casecmp(type, "text/plain")) {
+        if (ascii_casecmp(type, "text/plain") &&
+            ascii_casecmp(type, "text/markdown")) {
                 ntb_set_error(&data->error,
                               &ntb_mail_parser_error,
                               NTB_MAIL_PARSER_ERROR_INVALID_CONTENT_TYPE,
