@@ -20,6 +20,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - uses: actions/cache@v1
+      with:
+        path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+        key: ${{ runner.os }}-chocolatey-${{ matrix.os }}
+
     - name: Install packages
       if: startsWith(matrix.os, 'ubuntu')
       run: |
@@ -34,7 +39,6 @@ jobs:
     - name: Install choco packages (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
-        choco install wget
         choco install cygwin
       shell: bash
 
@@ -62,10 +66,15 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         export SHELLOPTS
-        cd ${GITHUB_WORKSPACE}/notbit
-        ./autogen.sh
+        ./autogen.sh --prefix=$GITHUB_WORKSPACE
         make
       shell: bashcyg -eo igncr -o pipefail {0}
+
+    - uses: actions/upload-artifact@v2
+      if: success() || failure()
+      with:
+        name: config.log
+        path: config.log
 
   create_release:
     if: contains(toJson(github.event.commits), '[skip ci]') == false
