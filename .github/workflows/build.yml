@@ -13,12 +13,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-18.04, macos-latest, windows-latest]
-        os: [windows-latest]
+        os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
+
+    - uses: actions/cache@v1
+      with:
+        path: C:\Users\runneradmin\AppData\Local\Temp\chocolatey
+        key: ${{ runner.os }}-chocolatey-${{ matrix.os }}
 
     - name: Install packages
       if: startsWith(matrix.os, 'ubuntu')
@@ -34,14 +38,13 @@ jobs:
     - name: Install choco packages (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
-        choco install wget
         choco install cygwin
       shell: bash
 
     - name: Install cygwin packages
       if: startsWith(matrix.os, 'windows')
       run: |
-        C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P autoconf,automake,libtool,gcc-core,libssl1.1,make,patch
+        C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P autoconf,automake,gcc-core,libssl1.1,make,patch
       shell: cmd
 
     - name: Cygwin cleanup
@@ -58,14 +61,41 @@ jobs:
         echo "C:\tools\cygwin\usr\bin" >> $GITHUB_PATH
       shell: bash
 
+    - name: Compile notbit
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        ./autogen.sh --prefix=$GITHUB_WORKSPACE
+        make
+        make install
+        mkdir lib
+        find /usr/lib -iname 'libcrypto.so*' -exec cp -av {} lib \;
+        tar -czvf notbit.tar.gz bin lib
+      shell: bash
+
     - name: Compile notbit (windows)
       if: startsWith(matrix.os, 'windows')
       run: |
         export SHELLOPTS
-        cd ${GITHUB_WORKSPACE}/notbit
-        ./autogen.sh
+        rm -f /cygdrive/c/Program\ Files/Git/usr/bin/autopoint*
+        ./autogen.sh --prefix=$GITHUB_WORKSPACE
         make
-      shell: bashcyg -eo igncr -o pipefail {0}
+      shell: bashcyg -eo igncr {0}
+
+    - uses: actions/upload-artifact@v2
+      if: success() || failure()
+      with:
+        name: config.log
+        path: config.log
+
+    - name: Release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_name: notbit.tar.gz
+        asset_path: notbit.tar.gz
+        asset_content_type: application/octet-stream
 
   create_release:
     if: contains(toJson(github.event.commits), '[skip ci]') == false
@@ -75,7 +105,6 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
 
     env:
-      TAGNAME: continuous-not
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
