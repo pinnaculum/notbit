@@ -30,7 +30,7 @@ fi
 
 rm -rf autom4te.cache
 
-autoreconf --force --install --verbose || exit $?
+autoreconf --debug --force --install --verbose || exit $?
 
 cd "$olddir"
 test -n "$NOCONFIGURE" || "$srcdir/configure" "$@"
