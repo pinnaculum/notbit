@@ -1,0 +1,98 @@
+name: notbit
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    if: contains(toJson(github.event.commits), '[skip ci]') == false
+    needs: create_release
+    strategy:
+      fail-fast: false
+      matrix:
+        # os: [ubuntu-18.04, macos-latest, windows-latest]
+        os: [windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install packages
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get install -y autoconf automake gcc
+
+    - name: Install packages (macos)
+      if: startsWith(matrix.os, 'mac')
+      run: |
+        brew install tor openssl
+        brew install pkg-config autoconf automake
+
+    - name: Install choco packages (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        choco install wget
+        choco install cygwin
+      shell: bash
+
+    - name: Install cygwin packages
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P autoconf,automake,libtool,gcc-core,libssl1.1,make,patch
+      shell: cmd
+
+    - name: Cygwin cleanup
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        # Rename cygwin's bash
+        mv "C:\tools\cygwin\bin\bash.exe" "C:\tools\cygwin\bin\bashcyg.exe"
+      shell: bash
+
+    - name: OS-specific vars (win)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        echo "C:\tools\cygwin\bin" >> $GITHUB_PATH
+        echo "C:\tools\cygwin\usr\bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Compile notbit (windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        export SHELLOPTS
+        cd ${GITHUB_WORKSPACE}/notbit
+        ./autogen.sh
+        make
+      shell: bashcyg -eo igncr -o pipefail {0}
+
+  create_release:
+    if: contains(toJson(github.event.commits), '[skip ci]') == false
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+    env:
+      TAGNAME: continuous-not
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Release config
+        id: release_config
+        run: |
+          echo "GIT_BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "TAGNAME=continuous-${GITHUB_REF##*/}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+
+        with:
+          prerelease: true
+          tag_name: ${{ env.TAGNAME}}
+          release_name: Notbit
+          draft: false
