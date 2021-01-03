@@ -66,9 +66,10 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         export SHELLOPTS
+        rm -f /cygdrive/c/Program\ Files/Git/usr/bin/autopoint*
         ./autogen.sh --prefix=$GITHUB_WORKSPACE
         make
-      shell: bashcyg -eo igncr -o pipefail {0}
+      shell: bashcyg -eo igncr {0}
 
     - uses: actions/upload-artifact@v2
       if: success() || failure()
