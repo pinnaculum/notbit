@@ -76,6 +76,7 @@ jobs:
 
     env:
       TAGNAME: continuous-not
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v2
