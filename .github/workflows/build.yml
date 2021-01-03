@@ -45,7 +45,7 @@ jobs:
     - name: Install cygwin packages
       if: startsWith(matrix.os, 'windows')
       run: |
-        C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P autoconf,automake,libtool,gcc-core,libssl1.1,make,patch
+        C:\tools\cygwin\cygwinsetup.exe -qgnNdO -R C:/tools/cygwin -s http://mirrors.kernel.org/sourceware/cygwin/ -P autoconf,automake,gcc-core,libssl1.1,make,patch
       shell: cmd
 
     - name: Cygwin cleanup
