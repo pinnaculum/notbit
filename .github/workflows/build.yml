@@ -68,8 +68,7 @@ jobs:
         make
         make install
         mkdir lib
-        find /usr/lib -iname 'libcrypto.so*' -exec cp -av {} lib \;
-        tar -czvf notbit.tar.gz bin lib
+        tar -czvf notbit.tar.gz bin
       shell: bash
 
     - name: Compile notbit (windows)
