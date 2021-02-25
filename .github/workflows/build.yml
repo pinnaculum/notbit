@@ -65,7 +65,7 @@ jobs:
       if: startsWith(matrix.os, 'ubuntu')
       run: |
         ./autogen.sh --prefix=$GITHUB_WORKSPACE CFLAGS="-static"
-        make LDFLAGS="--static"
+        make LDFLAGS="-static -ldl"
         make install
         tar -czvf notbit.tar.gz bin
       shell: bash
