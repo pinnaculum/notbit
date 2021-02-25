@@ -13,8 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-18.04, macos-latest, windows-latest]
-        os: [windows-latest]
+        os: [ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -62,6 +61,15 @@ jobs:
         echo "C:\tools\cygwin\usr\bin" >> $GITHUB_PATH
       shell: bash
 
+    - name: Compile notbit
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        ./autogen.sh --prefix=$GITHUB_WORKSPACE
+        make
+        make install
+        tar -czvf notbit.tar.gz bin/notbit bin/notbit-keygen bin/notbit-sendmail
+      shell: bash
+
     - name: Compile notbit (windows)
       if: startsWith(matrix.os, 'windows')
       run: |
@@ -76,6 +84,16 @@ jobs:
       with:
         name: config.log
         path: config.log
+
+    - name: Release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_name: notbit.tar.gz
+        asset_path: notbit.tar.gz
+        asset_content_type: application/octet-stream
 
   create_release:
     if: contains(toJson(github.event.commits), '[skip ci]') == false
