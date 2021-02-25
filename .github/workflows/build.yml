@@ -88,7 +88,7 @@ jobs:
     - name: Release asset
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ needs.create_release.outputs.upload_url }}
         asset_name: notbit.tar.gz
@@ -103,7 +103,6 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
 
     env:
-      TAGNAME: continuous-not
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
