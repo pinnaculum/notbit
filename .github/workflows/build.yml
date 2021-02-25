@@ -64,10 +64,10 @@ jobs:
     - name: Compile notbit
       if: startsWith(matrix.os, 'ubuntu')
       run: |
-        ./autogen.sh --prefix=$GITHUB_WORKSPACE
-        make
+        ./autogen.sh --prefix=$GITHUB_WORKSPACE CFLAGS="-static"
+        make LDFLAGS="--static"
         make install
-        tar -czvf notbit.tar.gz bin/notbit bin/notbit-keygen bin/notbit-sendmail
+        tar -czvf notbit.tar.gz bin
       shell: bash
 
     - name: Compile notbit (windows)
